@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Global Sequence Alignment Calculator</title>
+<style>
+:root{--bg:#f6f8fa;--card:#fff;--ink:#17202a;--mute:#5b6773;--line:#dde3ea;--acc:#0f766e;--acc-soft:#d9f2ee;--ok:#15803d;--okb:#dcfce7;--warn:#a16207;--warnb:#fef3c7;--bad:#b91c1c;--badb:#fee2e2;--init:#eef1f5;--path:#bfe9e3;--dg:#1d4ed8;--dgb:#dbeafe;--up:#7e22ce;--upb:#f3e8ff;--lf:#c2410c;--lfb:#ffedd5;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10161c;--card:#18212a;--ink:#e8edf2;--mute:#9aa7b4;--line:#2b3947;--acc:#4fd1c3;--acc-soft:#17403c;--ok:#86efac;--okb:#14391f;--warn:#fcd34d;--warnb:#3d3010;--bad:#fca5a5;--badb:#451a1a;--init:#212d38;--path:#1d5650;--dg:#93c5fd;--dgb:#1e3a5f;--up:#d8b4fe;--upb:#3b2158;--lf:#fdba74;--lfb:#4a2a10;}}
+:root[data-theme="dark"]{--bg:#10161c;--card:#18212a;--ink:#e8edf2;--mute:#9aa7b4;--line:#2b3947;--acc:#4fd1c3;--acc-soft:#17403c;--ok:#86efac;--okb:#14391f;--warn:#fcd34d;--warnb:#3d3010;--bad:#fca5a5;--badb:#451a1a;--init:#212d38;--path:#1d5650;--dg:#93c5fd;--dgb:#1e3a5f;--up:#d8b4fe;--upb:#3b2158;--lf:#fdba74;--lfb:#4a2a10;}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--line)}
+.wrap{max-width:960px;margin:0 auto;padding:0 18px}
+nav{display:flex;gap:18px;align-items:center;padding:12px 0;font-size:14px;flex-wrap:wrap}
+nav b{margin-right:auto;font-size:15px}nav a{color:var(--mute);text-decoration:none}nav a:hover{color:var(--acc)}
+.hero{padding:30px 0 26px}h1{margin:0 0 6px;font-size:clamp(26px,5vw,38px);line-height:1.2;letter-spacing:-.02em}
+.hero p{margin:0;color:var(--mute);font-size:18px}
+section{margin:22px 0}h2{font-size:22px;margin:0 0 4px}h3{font-size:17px;margin:0 0 6px}
+.sub{color:var(--mute);margin:0 0 14px;font-size:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.info{border-left:4px solid var(--acc);border-radius:10px}
+label{display:block;font-weight:600;font-size:14px;margin-bottom:4px}
+input{width:100%;font:inherit;padding:10px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+input.seq{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;font-size:18px}
+input:focus,button:focus-visible,td.c:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+.grid{display:grid;gap:14px;grid-template-columns:1fr 1fr}.grid3{display:grid;gap:14px;grid-template-columns:repeat(3,1fr);margin-top:14px}
+@media(max-width:620px){.grid,.grid3{grid-template-columns:1fr}}
+.hint{font-size:13px;color:var(--mute);margin-top:4px}.err{color:var(--bad);font-size:13px;min-height:19px;margin-top:4px}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+button{font:inherit;font-weight:600;padding:10px 20px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) button.pri{color:#06201d}}
+button:disabled{opacity:.45;cursor:not-allowed}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:16px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.stat b{display:block;font-size:24px;line-height:1.2}.stat span{font-size:13px;color:var(--mute)}
+.stat.big{background:var(--acc-soft);border-color:var(--acc)}
+.scroll{overflow-x:auto;padding-bottom:6px}
+table{border-collapse:separate;border-spacing:3px;margin:0 auto}
+td,th{min-width:46px;height:46px;text-align:center;border-radius:8px;font-variant-numeric:tabular-nums;font-size:15px}
+th{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;background:var(--acc-soft);color:var(--acc)}
+td.c{background:var(--card);border:1px solid var(--line);cursor:pointer;position:relative}
+td.c.init{background:var(--init);color:var(--mute)}
+td.c.path{background:var(--path);border-color:var(--acc);font-weight:700;color:var(--ink)}
+td.c.sel{outline:3px solid var(--ink);outline-offset:-1px}
+td .ar{position:absolute;top:0;right:4px;font-size:12px;color:var(--acc)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin-top:12px;justify-content:center}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--line);vertical-align:-1px;margin-right:5px}
+.opt{display:flex;gap:10px;align-items:baseline;justify-content:space-between;padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;margin:6px 0;flex-wrap:wrap}
+.opt.win{border-color:var(--ok);background:var(--okb)}
+code,.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{font-size:13px;padding:3px 10px;border-radius:999px;background:var(--bg);border:1px solid var(--line)}
+.aln{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:12px 0;font-family:ui-monospace,Menlo,Consolas,monospace}
+.col{display:flex;flex-direction:column;align-items:center;width:34px;border-radius:8px;font-size:24px;font-weight:700;line-height:1.5;padding:2px 0}
+.col small{font-size:18px;line-height:1.1}
+.col.m{background:var(--okb);color:var(--ok)}.col.x{background:var(--warnb);color:var(--warn)}.col.g{background:var(--badb);color:var(--bad)}
+.res{border:2px solid var(--acc)}
+.steps{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:0;padding:0;list-style:none}
+.steps li{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px}
+.steps .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--acc);color:var(--card);font-weight:700;margin-bottom:6px}
+.formula{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;line-height:1.8}
+.mini{display:inline-grid;grid-template-columns:repeat(3,22px);gap:2px;margin-top:6px}.mini i{height:22px;border-radius:5px;border:1px solid var(--line);background:var(--card);font-style:normal;font-size:12px;text-align:center}
+.mini .h{background:var(--acc-soft);border-color:var(--acc)}
+td.c.src-d{background:var(--dgb);border:2px dashed var(--dg)}
+td.c.src-u{background:var(--upb);border:3px dotted var(--up)}
+td.c.src-l{background:var(--lfb);border:3px double var(--lf)}
+td.c.win{box-shadow:0 0 0 3px var(--ok);font-weight:700;color:var(--ink)}
+td .src{position:absolute;left:3px;top:0;font-size:12px;font-weight:700;line-height:1.5}
+.src.d{color:var(--dg)}.src.u{color:var(--up)}.src.l{color:var(--lf)}
+td .pick{position:absolute;right:3px;bottom:0;font-size:15px;font-weight:700;color:var(--ink)}
+.mxwrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+.panel{border:1.5px solid var(--line);border-radius:14px;padding:14px;background:var(--bg);position:sticky;top:12px}
+.panel h3{margin-bottom:2px}
+@media(max-width:900px){.mxwrap{grid-template-columns:1fr}.panel{position:static}}
+.opt{display:block;padding:10px 12px;background:var(--card)}
+.opt.win{background:var(--okb)}
+.opt.o-d{border-left:6px solid var(--dg)}.opt.o-u{border-left:6px solid var(--up)}.opt.o-l{border-left:6px solid var(--lf)}
+.oh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.tg{font-weight:700;padding:1px 10px;border-radius:999px;font-size:14px}
+.tg.d{background:var(--dgb);color:var(--dg)}.tg.u{background:var(--upb);color:var(--up)}.tg.l{background:var(--lfb);color:var(--lf)}
+.ck{color:var(--ok);font-weight:700;font-size:13px}
+.rl{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.rl>div{flex:1;min-width:130px;background:var(--okb);border:1.5px solid var(--ok);border-radius:10px;padding:8px 12px;font-size:14px}
+.rl b{display:block;font-size:19px}
+footer{padding:26px 0;color:var(--mute);font-size:13px;text-align:center}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><div class="wrap"><nav><b>Alignment Lab</b><a href="#input">Scoring &amp; sequences</a><a href="#how">How it works</a><a href="#formula">Formula</a></nav>
+<div class="hero"><h1>Global Sequence Alignment Calculator</h1><p>Visualize and understand the Needleman–Wunsch algorithm step by step.</p></div></div></header>
+
+<main class="wrap">
+<section><div class="card info"><h3>What is global alignment?</h3><p style="margin:0">Global alignment compares two sequences from beginning to end and finds the best overall alignment. It lines up matching letters and adds gaps (<code>-</code>) where one sequence needs a pause.</p></div></section>
+
+<section id="input"><div class="card">
+<h2>Scoring parameters</h2><p class="sub">Set these first. They decide how every cell of the matrix is calculated.</p>
+<div class="grid3" style="margin-top:0">
+<div><label for="pm">Match score</label><input id="pm" type="number" step="1" value="1"><div class="hint">Reward when letters are equal. Use a positive number.</div></div>
+<div><label for="px">Mismatch penalty</label><input id="px" type="number" step="1" value="-1"><div class="hint">Cost when letters differ. Usually negative.</div></div>
+<div><label for="pg">Gap penalty</label><input id="pg" type="number" step="1" value="-2"><div class="hint">Cost of adding a gap. Usually negative.</div></div>
+</div>
+<div class="err" id="ep"></div>
+<h2 style="margin-top:14px">Sequence input</h2><p class="sub">Type two sequences using letters only. Lowercase letters become uppercase automatically.</p>
+<div class="grid">
+<div><label for="s1">Sequence 1</label><input id="s1" class="seq" maxlength="30" placeholder="GATTACA" autocomplete="off" spellcheck="false"><div class="err" id="e1"></div></div>
+<div><label for="s2">Sequence 2</label><input id="s2" class="seq" maxlength="30" placeholder="GCATGCU" autocomplete="off" spellcheck="false"><div class="err" id="e2"></div></div>
+</div>
+<div class="btns"><button class="pri" id="go" disabled>Calculate Alignment</button><button id="ex">Use example</button><button id="rs">Clear / Reset</button></div>
+</div></section>
+
+<div id="out" hidden>
+<section><div class="card"><h2>1. Scoring information</h2>
+<div class="stats" id="sc"></div>
+<p class="sub" style="margin:12px 0 0">The algorithm calculates the best possible alignment from the beginning of both sequences to the end.</p></div></section>
+
+<section id="matrixsec"><div class="card"><h2>2. Dynamic programming matrix</h2>
+<p class="sub">Sequence 1 runs across the top and Sequence 2 runs down the side. The first row and column start from zero and add one gap penalty per step. <b>Click any cell</b> to see exactly where its value came from.</p>
+<div class="mxwrap"><div class="scroll"><table id="mx" aria-label="Scoring matrix"></table></div>
+<aside class="panel" id="ex-box" aria-live="polite"></aside></div>
+<div class="legend"><span><i class="sw" style="background:var(--init)"></i>Start row and column</span><span><i class="sw" style="background:var(--path);border-color:var(--acc)"></i>Traceback path</span><span><i class="sw" style="outline:2px solid var(--ink);outline-offset:-2px"></i>Selected cell</span></div>
+<div class="legend"><span><i class="sw" style="background:var(--dgb);border:2px dashed var(--dg)"></i>↖ Diagonal source</span><span><i class="sw" style="background:var(--upb);border:2px dotted var(--up)"></i>↑ Up source</span><span><i class="sw" style="background:var(--lfb);border:3px double var(--lf)"></i>← Left source</span><span><i class="sw" style="box-shadow:0 0 0 2px var(--ok)"></i>✓ Source that gave the maximum</span></div>
+</div></section>
+
+<section><div class="card"><h2>3. Traceback</h2>
+<p class="sub">Start at the bottom-right cell and follow the choices back to the top-left cell. Arrows are also drawn in the matrix.</p>
+<div class="chips" style="margin-bottom:12px"><span class="chip">↖ Diagonal = match or mismatch</span><span class="chip">↑ Up = gap in Sequence 1</span><span class="chip">← Left = gap in Sequence 2</span></div>
+<div class="chips" id="tb"></div></div></section>
+
+<section id="result"><div class="card res">
+<h2>4. Optimal Global Alignment</h2><p class="sub">Green = match, yellow = mismatch, red = gap.</p>
+<div class="mono" style="text-align:center;font-size:13px;color:var(--mute)" id="lbl"></div>
+<div class="aln" id="aln"></div>
+<div class="mono" style="text-align:center;color:var(--mute);font-size:14px" id="lines"></div>
+<div class="stats" id="stats"></div>
+<p id="why" style="margin:16px 0 0"></p>
+</div></section>
+
+</div>
+
+<section id="how"><div class="card"><h2>How the algorithm works</h2><p class="sub">Four simple steps.</p>
+<ol class="steps">
+<li><span class="n">1</span><h3>Initialize</h3><div style="font-size:15px">Make a grid. Fill the first row and column with 0, then −2, −4, … (one gap penalty per step).</div><div class="mini"><i class="h">0</i><i class="h">−2</i><i class="h">−4</i><i class="h">−2</i><i></i><i></i><i class="h">−4</i><i></i><i></i></div></li>
+<li><span class="n">2</span><h3>Fill the matrix</h3><div style="font-size:15px">For each cell, try a diagonal move (match or mismatch), a move down (gap) and a move right (gap). Keep the highest score.</div><div class="mini"><i class="h">↖</i><i class="h">↑</i><i></i><i class="h">←</i><i>?</i><i></i><i></i><i></i><i></i></div></li>
+<li><span class="n">3</span><h3>Read the score</h3><div style="font-size:15px">The bottom-right cell holds the best total score for aligning both full sequences.</div><div class="mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="h">★</i></div></li>
+<li><span class="n">4</span><h3>Trace back</h3><div style="font-size:15px">Walk from the bottom-right to the top-left, following the moves that produced each score. Reverse the result to get the alignment.</div><div class="mini"><i></i><i></i><i class="h">★</i><i></i><i class="h">↖</i><i></i><i class="h">↖</i><i></i><i></i></div></li>
+</ol></div></section>
+
+<section id="formula"><div class="card"><h2>Algorithm formula</h2>
+<div class="formula">F(i,j) = max(<br>&nbsp;&nbsp;F(i-1,j-1) + score,<br>&nbsp;&nbsp;F(i-1,j) + gap,<br>&nbsp;&nbsp;F(i,j-1) + gap<br>)</div>
+<ul style="padding-left:20px;margin:12px 0 0">
+<li><b>F(i,j)</b>: the best score for aligning the first <i>j</i> letters of Sequence 1 with the first <i>i</i> letters of Sequence 2.</li>
+<li><b>F(i-1,j-1) + score</b>: take the diagonal cell and add the match score or mismatch penalty.</li>
+<li><b>F(i-1,j) + gap</b>: take the cell above and add the gap penalty (a gap in Sequence 1).</li>
+<li><b>F(i,j-1) + gap</b>: take the cell to the left and add the gap penalty (a gap in Sequence 2).</li>
+<li><b>max</b>: keep the largest of the three values.</li></ul></div></section>
+</main>
+<footer>Everything runs in your browser. No data is sent anywhere.</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const s1=$('s1'),s2=$('s2'),go=$('go');
+let S=null;
+const num=id=>{const v=$(id).value.trim();return v===''||isNaN(+v)?null:+v};
+const fmt=n=>n<0?'−'+Math.abs(n):(''+n);
+const sg=n=>n>0?'+'+n:fmt(n);
+
+function clean(el,errId){
+  const raw=el.value,c=raw.replace(/[^a-zA-Z]/g,'').toUpperCase();
+  el.value=c;
+  $(errId).textContent=raw.replace(/[a-zA-Z]/g,'').length?'Only letters A–Z are allowed. Other characters were removed.':'';
+}
+function validate(){
+  const ok=num('pm')!==null&&num('px')!==null&&num('pg')!==null;
+  $('ep').textContent=ok?'':'Please enter a number in each scoring box.';
+  go.disabled=!(s1.value&&s2.value&&ok);
+}
+[[s1,'e1'],[s2,'e2']].forEach(([el,e])=>el.addEventListener('input',()=>{clean(el,e);validate()}));
+['pm','px','pg'].forEach(i=>$(i).addEventListener('input',validate));
+
+function align(a,b,M,X,G){
+  const n=a.length,m=b.length;
+  const F=Array.from({length:m+1},()=>Array(n+1).fill(0));
+  for(let j=1;j<=n;j++)F[0][j]=j*G;
+  for(let i=1;i<=m;i++)F[i][0]=i*G;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++){
+    const sc=a[j-1]===b[i-1]?M:X;
+    F[i][j]=Math.max(F[i-1][j-1]+sc,F[i-1][j]+G,F[i][j-1]+G);
+  }
+  let i=m,j=n,A1='',A2='',steps=[],cols=[];
+  steps.push({i,j,mv:'start'});
+  while(i>0||j>0){
+    const sc=i>0&&j>0?(a[j-1]===b[i-1]?M:X):0;
+    let mv;
+    if(i>0&&j>0&&F[i][j]===F[i-1][j-1]+sc)mv='d';
+    else if(i>0&&F[i][j]===F[i-1][j]+G)mv='u';
+    else mv='l';
+    steps[steps.length-1].mv=mv;
+    if(mv==='d'){cols.push({x:a[j-1],y:b[i-1],t:a[j-1]===b[i-1]?'m':'x'});i--;j--}
+    else if(mv==='u'){cols.push({x:'-',y:b[i-1],t:'g'});i--}
+    else{cols.push({x:a[j-1],y:'-',t:'g'});j--}
+    steps.push({i,j,mv:'end'});
+  }
+  cols.reverse();
+  return{a,b,M,X,G,F,steps,cols,n,m};
+}
+
+function run(){
+  const a=s1.value,b=s2.value;
+  S=align(a,b,num('pm'),num('px'),num('pg'));
+  const {cols,F,n,m,M,X,G}=S;
+  const mt=cols.filter(c=>c.t==='m').length,mm=cols.filter(c=>c.t==='x').length,gp=cols.filter(c=>c.t==='g').length;
+  $('aln').innerHTML=cols.map(c=>`<div class="col ${c.t}"><span>${c.x}</span><small>${c.t==='m'?'|':c.t==='x'?'.':'&nbsp;'}</small><span>${c.y}</span></div>`).join('');
+  const l1=cols.map(c=>c.x).join(''),l2=cols.map(c=>c.y).join(''),ml=cols.map(c=>c.t==='m'?'|':c.t==='x'?'.':' ').join('');
+  $('lbl').textContent='Sequence 1 (top) · Sequence 2 (bottom)';
+  $('lines').innerHTML=`<pre style="margin:0;white-space:pre;overflow-x:auto;display:inline-block;text-align:left">${l1}\n${ml.replace(/ /g,' ')}\n${l2}</pre>`;
+  const score=F[m][n];
+  $('stats').innerHTML=`<div class="stat big"><b>${fmt(score)}</b><span>Alignment score</span></div><div class="stat"><b>${mt}</b><span>Matches</span></div><div class="stat"><b>${mm}</b><span>Mismatches</span></div><div class="stat"><b>${gp}</b><span>Gaps</span></div><div class="stat"><b>${cols.length}</b><span>Alignment length</span></div>`;
+  $('why').innerHTML=`<b>Why this score?</b> ${mt} match${mt!==1?'es':''} × ${sg(M)} + ${mm} mismatch${mm!==1?'es':''} × ${sg(X)} + ${gp} gap${gp!==1?'s':''} × ${sg(G)} = <b>${fmt(mt*M+mm*X+gp*G)}</b>. This equals the bottom-right cell of the matrix.`;
+  $('sc').innerHTML=`<div class="stat"><b>${sg(M)}</b><span>Match score: letters are equal</span></div><div class="stat"><b>${sg(X)}</b><span>Mismatch penalty: letters differ</span></div><div class="stat"><b>${sg(G)}</b><span>Gap penalty: one letter paired with a gap</span></div>`;
+  const ar={d:'↖',u:'↑',l:'←'},pm={};
+  S.steps.forEach(s=>{if(s.mv in ar)pm[s.i+','+s.j]=ar[s.mv]});
+  S.pm=pm;
+  let h='<tr><th></th><th>–</th>'+[...a].map(c=>`<th>${c}</th>`).join('')+'</tr>';
+  for(let i=0;i<=m;i++){
+    h+=`<tr><th>${i?b[i-1]:'–'}</th>`;
+    for(let j=0;j<=n;j++){
+      const k=i+','+j,p=pm[k]!==undefined||(i===0&&j===0);
+      h+=`<td class="c${i===0||j===0?' init':''}${p?' path':''}" tabindex="0" data-i="${i}" data-j="${j}" aria-label="Cell ${i},${j}, value ${F[i][j]}">${fmt(F[i][j])}${pm[k]?`<span class="ar">${pm[k]}</span>`:''}</td>`;
+    }
+    h+='</tr>';
+  }
+  $('mx').innerHTML=h;
+  $('tb').innerHTML=S.steps.filter(s=>s.mv in ar).map((s,k)=>{
+    const t=s.mv==='d'?(a[s.j-1]===b[s.i-1]?'match '+a[s.j-1]:'mismatch '+a[s.j-1]+'/'+b[s.i-1]):s.mv==='u'?'gap in Seq 1':'gap in Seq 2';
+    return `<span class="chip">${k+1}. [${s.i},${s.j}] ${ar[s.mv]} ${t}</span>`}).join('')+'<span class="chip">Reached [0,0]: done</span>';
+  $('out').hidden=false;
+  explain(m,n);
+  $('matrixsec').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+let mark=[];
+const AR={d:'↖',u:'↑',l:'←'},NM={d:'Diagonal',u:'Up',l:'Left'};
+const cellEl=(i,j)=>document.querySelector(`td[data-i="${i}"][data-j="${j}"]`);
+function tag(i,j,t,win){
+  const td=cellEl(i,j);if(!td)return;
+  td.classList.add('src-'+t);if(win)td.classList.add('win');
+  td.insertAdjacentHTML('beforeend',`<span class="src ${t}">${AR[t]}${win?' ✓':''}</span>`);
+  mark.push(td);
+}
+function explain(i,j){
+  const {a,b,M,X,G,F}=S,box=$('ex-box');
+  mark.forEach(t=>{t.classList.remove('sel','win','src-d','src-u','src-l');t.querySelectorAll('.src,.pick').forEach(e=>e.remove())});
+  mark=[];
+  const td=cellEl(i,j);td.classList.add('sel');mark.push(td);
+  const ref=`F(${i},${j})`;
+  if(i===0&&j===0){
+    box.innerHTML=`<h3>Selected Cell: ${ref}</h3><p>This is the starting cell. Nothing has been aligned yet, so its value is <b>0</b>.</p>`;return}
+  if(i===0||j===0){
+    const t=i===0?'l':'u',pi=i===0?0:i-1,pj=i===0?j-1:0,pv=F[pi][pj];
+    tag(pi,pj,t,true);
+    td.insertAdjacentHTML('beforeend',`<span class="pick">${AR[t]}</span>`);
+    box.innerHTML=`<h3>Selected Cell: ${ref}</h3>
+    <p class="hint" style="margin:0 0 8px">This cell is in the ${i===0?'first row':'first column'}. Its value comes from repeatedly adding the gap penalty.</p>
+    <div class="opt o-${t} win"><div class="oh"><span class="tg ${t}">${AR[t]} ${NM[t]}</span><span class="ck">✓ only source</span></div>
+    <div class="mono">${ref} = F(${pi},${pj}) + Gap</div><div class="mono">= ${pv} + (${G})</div><div class="mono">= <b>${F[i][j]}</b></div></div>
+    <div class="rl"><div>Value<b>${F[i][j]}</b></div><div>Source<b>${AR[t]} ${NM[t]}</b></div></div>
+    <p class="hint">In other words, ${ref} = ${i||j} × Gap = ${i||j} × (${G}) = ${F[i][j]}.</p>`;return}
+  const x=a[j-1],y=b[i-1],isM=x===y,sc=isM?M:X;
+  const dv=F[i-1][j-1],uv=F[i-1][j],lv=F[i][j-1];
+  const d=dv+sc,u=uv+G,l=lv+G,mx=Math.max(d,u,l);
+  const opts=[
+    ['d',`F(${i-1},${j-1}) + Score(${x},${y})`,`${dv} + (${sc}) = ${d}`,`${isM?'Match':'Mismatch'}: ${x} and ${y} ${isM?'are equal':'are different'}`,d,i-1,j-1],
+    ['u',`F(${i-1},${j}) + Gap`,`${uv} + (${G}) = ${u}`,'Gap in Sequence 1',u,i-1,j],
+    ['l',`F(${i},${j-1}) + Gap`,`${lv} + (${G}) = ${l}`,'Gap in Sequence 2',l,i,j-1]];
+  const wins=opts.filter(o=>o[4]===mx);
+  opts.forEach(o=>tag(o[5],o[6],o[0],o[4]===mx));
+  td.insertAdjacentHTML('beforeend',`<span class="pick">${wins.map(o=>AR[o[0]]).join('')}</span>`);
+  const srcTxt=wins.map(o=>`${AR[o[0]]} ${NM[o[0]]}`).join(' and ');
+  box.innerHTML=`<h3>Selected Cell: ${ref}</h3>
+  <p class="hint" style="margin:0 0 8px">Comparing <b>${x}</b> (Sequence 1) with <b>${y}</b> (Sequence 2). Three possible calculations:</p>`+
+  opts.map(o=>`<div class="opt o-${o[0]}${o[4]===mx?' win':''}"><div class="oh"><span class="tg ${o[0]}">${AR[o[0]]} ${NM[o[0]]}</span>${o[4]===mx?'<span class="ck">✓ highest</span>':''}</div>
+  <div class="mono">${o[1]}</div><div class="mono">${o[2]}</div><div class="hint">${o[3]}</div></div>`).join('')+
+  `<div class="rl"><div>Selected Maximum<b>${mx}</b></div><div>Source<b>${srcTxt}</b></div></div>`+
+  (wins.length>1?`<p class="hint">These options tie. The traceback prefers diagonal, then up, then left.</p>`:'');
+}
+$('mx').addEventListener('click',e=>{const t=e.target.closest('td.c');if(t){explain(+t.dataset.i,+t.dataset.j)}});
+$('mx').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const t=e.target.closest('td.c');if(t){e.preventDefault();explain(+t.dataset.i,+t.dataset.j)}}});
+go.addEventListener('click',run);
+$('ex').addEventListener('click',()=>{s1.value='GATTACA';s2.value='GCATGCU';$('pm').value=1;$('px').value=-1;$('pg').value=-2;['e1','e2'].forEach(i=>$(i).textContent='');validate();run()});
+$('rs').addEventListener('click',()=>{s1.value='';s2.value='';$('pm').value=1;$('px').value=-1;$('pg').value=-2;['e1','e2'].forEach(i=>$(i).textContent='');$('out').hidden=true;S=null;validate();window.scrollTo({top:0,behavior:'smooth'})});
+validate();
+</script>
+</body>
+</html>
